@@ -10,11 +10,12 @@ import (
 )
 
 func GetTodos(c *gin.Context) {
+
 	var todos []models.Todo
 	result := database.DB.Find(&todos)
 
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't fetch all tasks."})
 		return
 	}
 
@@ -22,12 +23,18 @@ func GetTodos(c *gin.Context) {
 }
 
 func CreateTodo(c *gin.Context) {
+
 	var newTodo models.Todo
+
 	if err := c.ShouldBindBodyWithJSON(&newTodo); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Couldn't create the task."})
 		return
 	}
-	database.DB.Create(&newTodo)
+
+	if err := database.DB.Create(&newTodo).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Counldn't create the task."})
+	}
+
 	c.JSON(http.StatusCreated, newTodo)
 }
 
@@ -55,7 +62,10 @@ func UpdateTodo(c *gin.Context) {
 		todo.Completed = *updatedTodoState.Completed
 	}
 
-	database.DB.Save(&todo)
+	if err := database.DB.Save(&todo).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Couldn't update the task."})
+		return
+	}
 	c.JSON(http.StatusOK, todo)
 }
 
