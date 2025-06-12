@@ -12,7 +12,7 @@ import (
 func GetTodos(c *gin.Context) {
 
 	var todos []models.Todo
-	result := database.DB.Find(&todos)
+	result := database.DB.Order("created_at DESC").Find(&todos)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't fetch all tasks."})
