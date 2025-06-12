@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"todo-list-backend/database"
 	"todo-list-backend/models"
 
@@ -31,13 +32,31 @@ func CreateTodo(c *gin.Context) {
 }
 
 func UpdateTodo(c *gin.Context) {
-	var updatedTodo models.Todo
-	if err := c.ShouldBindBodyWithJSON(&updatedTodo); err != nil {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	var updatedTodoState models.UpdateTodo
+	if err := c.ShouldBindBodyWithJSON(&updatedTodoState); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Couldn't update the task."})
 		return
 	}
-	database.DB.Save(&updatedTodo)
-	c.JSON(http.StatusOK, updatedTodo)
+
+	var todo models.Todo
+	if err := database.DB.First(&todo, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+	}
+
+	if updatedTodoState.Completed != nil {
+		todo.Completed = *updatedTodoState.Completed
+	}
+
+	database.DB.Save(&todo)
+	c.JSON(http.StatusOK, todo)
 }
 
 func DeleteTodo(c *gin.Context) {

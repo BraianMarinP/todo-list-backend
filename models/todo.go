@@ -14,3 +14,7 @@ type Todo struct {
 	Description string         `json:"description"`
 	Completed   bool           `json:"completed"`
 }
+
+type UpdateTodo struct {
+	Completed *bool `json:"completed"`
+}
