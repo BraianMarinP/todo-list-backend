@@ -73,15 +73,21 @@ func DeleteTodo(c *gin.Context) {
 	id := c.Param("id")
 	var todo models.Todo
 
-	if err := database.DB.First(&todo, id); err != nil {
+	if err := database.DB.First(&todo, id).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Couldn't delete the task."})
 		return
 	}
-	database.DB.Delete(&todo)
-	c.JSON(http.StatusOK, todo)
+	if err := database.DB.Delete(&todo).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't delete the task."})
+		return
+	}
+	c.Status(http.StatusNoContent)
 }
 
 func DeleteAllTodos(c *gin.Context) {
-	database.DB.Where("1 = 1").Delete(&models.Todo{})
+	if err := database.DB.Where("1 = 1").Delete(&models.Todo{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't delete all tasks."})
+		return
+	}
 	c.Status(http.StatusNoContent)
 }
