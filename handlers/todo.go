@@ -10,7 +10,13 @@ import (
 
 func GetTodos(c *gin.Context) {
 	var todos []models.Todo
-	database.DB.Find(&todos)
+	result := database.DB.Find(&todos)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, todos)
 }
 
